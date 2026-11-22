@@ -47,6 +47,10 @@
     line.textContent = text;
     output.insertBefore(line, inputRow);
     scrollLatest();
+    if (type === 'err' && GW.events) {
+      GW.events.emit('inputerror', {target: line});
+    }
+    return line;
   }
 
   function printLines(lines, type) {

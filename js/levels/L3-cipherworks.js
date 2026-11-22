@@ -11,7 +11,7 @@
   }
 
   function print(key, values, type) {
-    GW.terminal.print(format(copy[key], values || {}), type || 'sys');
+    return GW.terminal.print(format(copy[key], values || {}), type || 'sys');
   }
 
   function rotate(value, amount) {
@@ -84,7 +84,11 @@
     } else if (name === 'decode' && context.seenNote &&
         String(args[0] || '').toUpperCase() === context.puzzle.cipher) {
       context.decoded = true;
-      print('decoded', {plain: context.puzzle.plain}, 'ok');
+      var decodedText = format(copy.decoded, {plain: context.puzzle.plain});
+      var decodedLine = GW.terminal.print(decodedText, 'ok');
+      if (GW.decode) {
+        GW.decode.scramble(decodedLine, decodedText);
+      }
     } else if (name === 'verify' && context.decoded &&
         String(args[0] || '').toUpperCase() === context.puzzle.plain) {
       context.complete = true;

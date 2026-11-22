@@ -57,6 +57,24 @@
     menuScreen = document.getElementById('menu-screen');
     settingsScreen = document.getElementById('settings-screen');
     gameScreen = document.getElementById('game-screen');
+    var reduceMotion = GW.store.get('reduceMotion', null);
+    var motionQuery = typeof window.matchMedia === 'function' ?
+      window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+    document.documentElement.classList.toggle('reduce-motion',
+      Boolean(reduceMotion) || Boolean(motionQuery && motionQuery.matches));
+    if (motionQuery) {
+      var updateSystemMotion = function (event) {
+        var savedPreference = GW.store.get('reduceMotion', null);
+        document.documentElement.classList.toggle('reduce-motion',
+          Boolean(savedPreference) || event.matches);
+        GW.events.emit('motionchange', {reduced: GW.fx.reducedMotion()});
+      };
+      if (typeof motionQuery.addEventListener === 'function') {
+        motionQuery.addEventListener('change', updateSystemMotion);
+      } else if (typeof motionQuery.addListener === 'function') {
+        motionQuery.addListener(updateSystemMotion);
+      }
+    }
 
     var lines = [
       'AURUM BIOS v9.4',
@@ -97,7 +115,19 @@
     settingsScreen.hidden = true;
     gameScreen.hidden = true;
     menuScreen.hidden = false;
+    if (GW.rain) {
+      GW.rain.stop();
+    }
+    if (GW.static) {
+      GW.static.stop();
+    }
+    if (GW.tunnel) {
+      GW.tunnel.skip();
+    }
     GW.music.start('menu');
+    if (GW.glitch) {
+      GW.glitch.play(menuScreen.querySelector('h1'));
+    }
     menuScreen.querySelector('.menu-item:not(:disabled)').focus();
   }
 
@@ -185,9 +215,20 @@
     });
 
     var reduceMotion = document.getElementById('reduce-motion');
+    reduceMotion.checked = document.documentElement.classList.contains('reduce-motion');
     reduceMotion.addEventListener('change', function () {
-      document.documentElement.classList.toggle('reduce-motion', reduceMotion.checked);
       GW.store.set('reduceMotion', reduceMotion.checked);
+      var systemReduced = typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      document.documentElement.classList.toggle('reduce-motion',
+        reduceMotion.checked || systemReduced);
+      GW.events.emit('motionchange', {reduced: GW.fx.reducedMotion()});
+    });
+
+    var quality = settingsScreen.querySelector('[data-quality]');
+    quality.value = GW.quality.getMode();
+    quality.addEventListener('change', function () {
+      GW.quality.setMode(quality.value);
     });
 
     var reset = settingsScreen.querySelector('[data-setting="reset"]');

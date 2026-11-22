@@ -79,6 +79,49 @@
     GW.story.clear();
   }
 
+  function exerciseEffectsSettings() {
+    GW.quality.setMode('LOW');
+    assert(GW.quality.get() === 'LOW', 'Manual LOW quality was not applied');
+    GW.quality.setMode('MED');
+    assert(GW.quality.get() === 'MED', 'Manual MED quality was not applied');
+    GW.quality.setMode('HIGH');
+    GW.quality.setMode('AUTO');
+    for (var slow = 0; slow < 68; slow += 1) {
+      GW.quality.update(0.03);
+    }
+    assert(GW.quality.get() === 'MED', 'AUTO quality did not lower after two slow seconds');
+    for (var slower = 0; slower < 68; slower += 1) {
+      GW.quality.update(0.03);
+    }
+    assert(GW.quality.get() === 'LOW', 'AUTO quality did not lower under slow frames');
+    GW.events.emit('levelstart', {id: 'quality-test'});
+    for (var fastInLevel = 0; fastInLevel < 130; fastInLevel += 1) {
+      GW.quality.update(0.016);
+    }
+    assert(GW.quality.get() === 'LOW', 'AUTO quality raised mid-level');
+    GW.events.emit('levelcomplete', {id: 'quality-test', success: false});
+    for (var fast = 0; fast < 260; fast += 1) {
+      GW.quality.update(0.016);
+    }
+    assert(GW.quality.get() === 'HIGH', 'AUTO quality did not recover between levels');
+    GW.tunnel.skip();
+    GW.rain.stop();
+    var root = document.documentElement;
+    var decoded = document.createElement('span');
+    GW.decode.scramble(decoded, 'RESOLVED', 1);
+    root.classList.add('reduce-motion');
+    assert(GW.fx.reducedMotion(), 'Reduce Motion class was ignored');
+    GW.events.emit('motionchange', {reduced: true});
+    assert(decoded.textContent === 'RESOLVED', 'Reduce Motion did not finish active decode');
+    GW.events.emit('tracefail');
+    var failScreen = document.querySelector('.line-cut-screen');
+    assert(failScreen && failScreen.textContent === GW.text.effects.lineCut,
+      'Reduced-motion fail screen did not show its text fallback');
+    GW.static.stop();
+    root.classList.remove('reduce-motion');
+    GW.quality.setMode('AUTO');
+  }
+
   try {
     ['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6'].forEach(function (id) {
       var level = GW.levels.get(id);
@@ -93,8 +136,10 @@
     });
     exerciseEndings();
     exerciseDaily();
+    exerciseEffectsSettings();
     lines.push('L6 PASS // Ghost and Whistle endings');
     lines.push('DAILY PASS // deterministic seed and completion record');
+    lines.push('FX PASS // quality tiers and Reduce Motion');
     status.textContent = 'PASS // ' + count + ' SEEDED PUZZLE RUNS';
     output.textContent = lines.join('\n');
   } catch (error) {

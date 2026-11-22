@@ -18,20 +18,128 @@
 .crt-overlay::after {
   content: "";
   position: absolute;
+  top: 0;
+  position: absolute;
   left: 0;
   right: 0;
   height: 2px;
-  background: rgba(255, 176, 0, .08);
+  background: var(--color-scanline);
   animation: scanline-roll 6s linear infinite;
 }
 
 @keyframes scanline-roll {
-  from { top: -2px; }
-  to { top: 100%; }
+  from { transform: translateY(-2px); }
+  to { transform: translateY(100vh); }
 }
 
 .reduce-motion .crt-overlay::after,
-.reduce-motion .map-node.active,
-.reduce-motion .boot-screen {
+.reduce-motion .map-node.active {
   animation: none;
+}
+
+.reduce-motion .boot-screen {
+  animation: boot-reduced-fade 200ms var(--ease-out) both;
+}
+
+.code-rain-canvas {
+  position: fixed;
+  z-index: var(--z-rain);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: .24;
+}
+
+.fx-canvas {
+  position: fixed;
+  display: block;
+  pointer-events: none;
+}
+
+.jack-in-canvas,
+.line-cut-canvas {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: var(--z-scene);
+}
+
+.glitch-canvas {
+  z-index: var(--z-glitch);
+}
+
+.tunnel-fade {
+  position: fixed;
+  z-index: var(--z-scene);
+  inset: 0;
+  background: var(--ink);
+  pointer-events: none;
+  animation: tunnel-fade var(--duration-motion-fallback) var(--ease-out) both;
+}
+
+.line-cut-screen {
+  position: fixed;
+  z-index: var(--z-fail);
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--ink);
+  pointer-events: auto;
+}
+
+.line-cut-copy {
+  position: absolute;
+  z-index: 1;
+  padding: var(--space-3);
+  color: var(--alarm);
+  background: var(--ink);
+  opacity: 0;
+  animation: line-cut-copy var(--duration-ui) var(--ease-out) both;
+  animation-delay: var(--duration-line-cut);
+}
+
+.reduce-motion .line-cut-copy {
+  opacity: 1;
+  animation: none;
+}
+
+.reduce-motion .tunnel-fade {
+  animation-duration: var(--duration-motion-fallback);
+}
+
+.reduce-motion .code-rain-canvas {
+  display: none !important;
+}
+
+.reduce-motion .jack-in-canvas,
+.reduce-motion .glitch-canvas {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crt-overlay::after,
+  .map-node.active {
+    animation: none;
+  }
+
+  .boot-screen {
+    animation: boot-reduced-fade var(--duration-boot-fallback) var(--ease-out) both;
+  }
+}
+
+@keyframes tunnel-fade {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes line-cut-copy {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes boot-reduced-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

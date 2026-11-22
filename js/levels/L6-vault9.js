@@ -10,7 +10,7 @@
   }
 
   function print(key, values, type) {
-    GW.terminal.print(format(copy[key], values || {}), type || 'sys');
+    return GW.terminal.print(format(copy[key], values || {}), type || 'sys');
   }
 
   function digitSum(code) {
@@ -141,7 +141,14 @@
   }
 
   function completeEnding(context, selected) {
-    print('endingHeader', {ending: selected.id}, 'story');
+    var heading = print('endingHeader', {ending: selected.id}, 'story');
+    if (GW.decode) {
+      GW.decode.scramble(
+        heading,
+        format(copy.endingHeader, {ending: selected.id}),
+        GW.fx.time('--duration-rank-scramble', 0.45)
+      );
+    }
     GW.terminal.print(copy.endings[selected.id], 'story');
     GW.story.send(copy.endings[selected.id], {echo: false});
     if (context.dailyDate && context.dailySeed !== null &&

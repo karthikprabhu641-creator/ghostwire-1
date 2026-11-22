@@ -1,0 +1,61 @@
+.score-widget {
+  position: relative;
+}
+
+.rank-stamp-impact {
+  transform: scale(1.6) rotate(-5deg);
+}
+
+.rank-stamp {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-2);
+  z-index: var(--z-overlay);
+  border: 2px solid var(--stamp);
+  padding: var(--space-1) var(--space-2);
+  color: var(--stamp);
+  background: var(--panel);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  opacity: 0;
+}
+
+.rank-stamp-impact {
+  animation: rank-stamp var(--duration-stamp) var(--ease-snap) forwards;
+}
+
+.rank-stamp-shake {
+  animation: stamp-shake var(--duration-stamp-shake) var(--ease-out);
+}
+
+.reduce-motion .rank-stamp-impact {
+  transform: none;
+  animation: rank-stamp-fade var(--duration-ui) var(--ease-out) forwards;
+}
+
+.reduce-motion .rank-stamp-shake {
+  animation: none;
+}
+
+@keyframes rank-stamp {
+  0% { transform: scale(1.6) rotate(-5deg); opacity: 0; }
+  42% { transform: scale(.94) rotate(1deg); opacity: 1; }
+  58% { transform: scale(1.04) rotate(-1deg); opacity: 1; }
+  72% { transform: scale(1) rotate(0); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 0; }
+}
+
+@keyframes rank-stamp-fade {
+  from { opacity: 0; }
+  20%, 75% { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes stamp-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(var(--stamp-shake-distance)); }
+  40% { transform: translateX(calc(0px - var(--stamp-shake-distance-2))); }
+  60% { transform: translateX(var(--stamp-shake-distance-3)); }
+  80% { transform: translateX(calc(0px - var(--stamp-shake-distance-4))); }
+}

@@ -14,6 +14,10 @@
       enable: 'CLICK TO ENABLE AUDIO',
       unavailable: 'AUDIO UNAVAILABLE'
     },
+    effects: {
+      lineCut: 'TRACE COMPLETE: LINE CUT',
+      rankStamp: 'RANK {{rank}}'
+    },
     levels: {
       L0: {
         title: 'BOOT CAMP',
@@ -123,7 +127,9 @@
           'The route must begin at ENTRY and end at CORE.',
           'Avoid the ICE node; enter the remaining route nodes in order.'
         ],
-        nodes: ['ENTRY', 'NODE-1', 'NODE-2', 'NODE-3', 'ICE', 'CORE']
+        nodes: ['ENTRY', 'NODE-1', 'NODE-2', 'NODE-3', 'ICE', 'CORE'],
+        safeLabel: 'SAFE',
+        iceLabel: 'ICE'
       },
       L6: {
         title: 'VAULT-9',
@@ -154,8 +160,6 @@
         ],
         signals: ['amber', 'cyan', 'violet', 'white'],
         nodes: ['ENTRY', 'NODE-A', 'NODE-B', 'NODE-C', 'ICE', 'CORE'],
-        safeLabel: 'SAFE',
-        iceLabel: 'ICE',
         storyChoices: {
           ghost: 'ENDING A // GHOST',
           whistle: 'ENDING B // WHISTLE'

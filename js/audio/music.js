@@ -252,9 +252,6 @@
       if (name === 'fail') {
         lastFailTime = ctx.currentTime;
         stop(120);
-        if (GW.audio.sfx) {
-          GW.audio.sfx.play('line_cut', {stinger: true});
-        }
       } else {
         GW.musicStingers.play(name, currentTempo, scene);
         if (name === 'ending_a') {

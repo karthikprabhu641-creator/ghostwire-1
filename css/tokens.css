@@ -10,6 +10,7 @@
   --ok: #5dff9a;
   --paper: #efe6cf;
   --stamp: #b3202a;
+  --color-scanline: rgba(255, 176, 0, .08);
   --line: rgba(255, 176, 0, .3);
   --ease-out: cubic-bezier(.2, .8, .2, 1);
   --ease-in-out: cubic-bezier(.65, 0, .35, 1);
@@ -18,6 +19,21 @@
   --duration-ui: 220ms;
   --duration-panel: 400ms;
   --duration-scene: 800ms;
+  --duration-motion-fallback: 250ms;
+  --duration-boot-fallback: 200ms;
+  --duration-decode-cycle: 360ms;
+  --duration-rain-glyph: 400ms;
+  --duration-stamp-shake: 200ms;
+  --duration-tunnel: 900ms;
+  --duration-tunnel-flash: 60ms;
+  --duration-glitch-min: 80ms;
+  --duration-glitch-max: 160ms;
+  --duration-decode-min: 700ms;
+  --duration-decode-max: 1200ms;
+  --duration-rank-scramble: 450ms;
+  --duration-line-cut: 350ms;
+  --duration-static: 1500ms;
+  --duration-stamp: 600ms;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -25,6 +41,15 @@
   --space-6: 24px;
   --space-8: 32px;
   --z-base: 1;
+  --z-rain: 0;
   --z-overlay: 20;
+  --z-scene: 30;
+  --z-glitch: 40;
+  --z-fail: 60;
   --z-modal: 50;
+  --glitch-offset: 8px;
+  --stamp-shake-distance: 5px;
+  --stamp-shake-distance-2: 4px;
+  --stamp-shake-distance-3: 3px;
+  --stamp-shake-distance-4: 2px;
 }

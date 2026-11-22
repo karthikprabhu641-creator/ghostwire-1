@@ -178,7 +178,7 @@
 }
 
 @keyframes boot-turn-on {
-  0% { transform: scaleY(.02); filter: brightness(4); }
-  70% { transform: scaleY(1); filter: brightness(1.4); }
-  100% { filter: brightness(1); }
+  0% { transform: scaleY(.02); opacity: .5; }
+  70% { transform: scaleY(1); opacity: .85; }
+  100% { opacity: 1; }
 }

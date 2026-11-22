@@ -56,7 +56,12 @@
         <label class="toggle-row"><span>Mute</span><input type="checkbox" data-audio-mute></label>
         <label class="toggle-row"><span>Reduce motion</span><input type="checkbox" id="reduce-motion"></label>
         <label>Quality
-          <select><option>Auto</option><option>High</option><option>Medium</option><option>Low</option></select>
+          <select data-quality>
+            <option value="AUTO">Auto</option>
+            <option value="HIGH">High</option>
+            <option value="MED">Medium</option>
+            <option value="LOW">Low</option>
+          </select>
         </label>
         <label>Font size
           <select><option>Small</option><option selected>Medium</option><option>Large</option></select>
