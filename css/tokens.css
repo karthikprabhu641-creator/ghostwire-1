@@ -1,0 +1,30 @@
+:root {
+  --ink: #07090c;
+  --panel: #0d1117;
+  --panel-2: #141a22;
+  --amber: #ffb000;
+  --amber-mid: #d99a1a;
+  --amber-dim: #a86f00;
+  --ice: #38e1ff;
+  --alarm: #ff2e63;
+  --ok: #5dff9a;
+  --paper: #efe6cf;
+  --stamp: #b3202a;
+  --line: rgba(255, 176, 0, .3);
+  --ease-out: cubic-bezier(.2, .8, .2, 1);
+  --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+  --ease-snap: cubic-bezier(.3, 1.4, .5, 1);
+  --duration-micro: 120ms;
+  --duration-ui: 220ms;
+  --duration-panel: 400ms;
+  --duration-scene: 800ms;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --z-base: 1;
+  --z-overlay: 20;
+  --z-modal: 50;
+}

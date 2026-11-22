@@ -1,0 +1,664 @@
+=====================================================================
+GHOSTWIRE : FULL PRODUCTION SPEC (v2)
+Structure, Tech Stack, UI/UX, Animations, Sounds, Music,
+README.md and AGENT.md, all in one file
+=====================================================================
+
+CONTENTS
+ 1. Project snapshot and hard constraints
+ 2. Best folder structure
+ 3. Best tech stack
+ 4. Best UI/UX
+ 5. Best animations
+ 6. Best sound design (SFX)
+ 7. Best music (procedural, no audio files)
+ 8. Performance, quality tiers, accessibility
+ 9. README.md (create verbatim)
+10. AGENT.md (create verbatim)
+
+This file extends GHOSTWIRE_AGENT_BRIEF.txt. If they conflict,
+this file wins. Game design (story, 7 levels, trace, scoring, ranks,
+endings, Daily Heist) stays exactly as in the brief.
+
+---------------------------------------------------------------------
+1. PROJECT SNAPSHOT AND HARD CONSTRAINTS
+---------------------------------------------------------------------
+GHOSTWIRE is a cinematic, offline, terminal-style hacking-puzzle
+game. One night, one vault (AURUM Orbital Bank, Vault-9), a TRACE
+meter that climbs, and a handler (VESPER) with a hidden agenda.
+7 levels: L0 Boot Camp, L1 KnockKnock, L2 CrackLine, L3 CipherWorks,
+L4 LogHound, L5 GraphRunner, L6 Vault-9 (boss). Two endings:
+A "Ghost" and B "Whistle". Three difficulties: Rookie, Operator,
+Ghost. Daily Heist from a date seed.
+
+HARD CONSTRAINTS (never break)
+ 1. 100% offline. No CDN, web fonts, remote images, API, analytics.
+ 2. No backend, no build step, no npm, no bundler.
+ 3. Runs by double-clicking index.html (file://). So: NO ES modules,
+    NO fetch/XHR for local files, level data lives in .js files.
+    Classic <script src> tags in a fixed order, one namespace:
+    window.GW.
+ 4. ALL audio is synthesized with Web Audio. No audio files, no
+    samples, no base64 audio. Music is procedurally generated.
+ 5. Plain project folder, no ZIP needed. README.md at the root.
+ 6. Total size under 3 MB. Latest Chrome, Edge, Firefox, Safari and
+    Android Chrome.
+ 7. Everything is fictional. No real hacking techniques, no real
+    scanning, no real IPs, brands or people.
+
+---------------------------------------------------------------------
+2. BEST FOLDER STRUCTURE
+---------------------------------------------------------------------
+ghostwire/
+  index.html
+  README.md
+  AGENT.md
+  CHANGELOG.md
+  LICENSE.txt
+  css/
+    tokens.css        colors, spacing, type scale, easing, z-index
+    base.css          reset, app shell, panel grid
+    terminal.css      terminal pane, prompt, output line types
+    hud.css           trace gauge, timer, score, tool slots, chips
+    comms.css         VESPER chat bubbles, typing indicator
+    dossier.css       paper intel cards, stamps
+    map.css           node map frame and legends
+    screens.css       menu, briefing, result, settings, leaderboard
+    fx.css            CRT, scanlines, glitch, flicker, vignette
+    responsive.css    mobile tabs, safe-area, small-screen rules
+  js/
+    core/
+      00-namespace.js   window.GW, version, config, feature flags
+      01-rng.js         mulberry32, pick, shuffle, int, seeded daily
+      02-events.js      pub/sub event bus
+      03-store.js       state, localStorage, migrate, export/import
+      04-loop.js        single requestAnimationFrame master loop
+      05-quality.js     FPS monitor, HIGH/MED/LOW tiers
+      06-input.js       keyboard, touch chips, shortcuts, haptics
+      07-parser.js      command registry, args, autocomplete
+      08-terminal.js    output printer, typewriter, history, ghost text
+    systems/
+      trace.js          trace logic, drift, tools, fail trigger
+      score.js          scoring, ranks, leaderboard, share code
+      story.js          VESPER comms queue, branching, endings
+      levels.js         level registry, loader, lifecycle
+      daily.js          Daily Heist seed and streak
+    audio/
+      engine.js         AudioContext, buses, limiter, unlock
+      noise.js          shared noise buffers, envelopes, helpers
+      sfx.js            every sound effect recipe (section 6)
+      music.js          generative music scheduler (section 7)
+      mixer.js          volume, mute, ducking, intensity mapping
+    fx/
+      crt.js            scanline roll, flicker, curvature toggle
+      rain.js           layered code-rain canvas
+      glitch.js         slice glitch, RGB split, shake
+      decode.js         scramble-to-reveal text effect
+      tunnel.js         jack-in tunnel canvas transition
+      static.js         noise canvas for fail screen
+    ui/
+      hud.js            gauge needle, timer, score ticker
+      map.js            node graph canvas renderer
+      comms.js          chat bubbles with typing delay
+      dossier.js        paper cards and stamps
+      screens.js        menu, briefing, result, settings, boards
+      toast.js          toasts and inline hints
+    levels/
+      L0-bootcamp.js  L1-knockknock.js  L2-crackline.js
+      L3-cipherworks.js  L4-loghound.js  L5-graphrunner.js
+      L6-vault9.js
+    data/
+      story-text.js     ALL dialogue and UI copy lives here
+      fake-names.js     fictional employees, hosts, files
+      music-data.js     scales, chord progressions, patterns
+    main.js             boot sequence, wiring, start
+  tests/
+    test.html           opens in browser, runs solvability tests
+    test-levels.js      200 seeds per level must be solvable
+  docs/
+    DESIGN.md  AUDIO.md  TESTING.md
+
+Script order in index.html: core -> systems -> audio -> fx -> ui ->
+data -> levels -> main.js. Each file is an IIFE attaching to GW.
+
+---------------------------------------------------------------------
+3. BEST TECH STACK (and why each choice)
+---------------------------------------------------------------------
+ - HTML5 semantic shell. One page, screens toggled with [hidden].
+ - CSS3: custom properties for every token, grid/flex layout,
+   clamp() for fluid type, @media (prefers-reduced-motion),
+   contain: layout paint on heavy panels, will-change only on the
+   needle and glitch layers.
+ - Vanilla JS ES2020, IIFE modules on window.GW. Zero libraries.
+   Why: file:// safe, tiny, no tooling, easy for an agent to verify.
+ - ONE master requestAnimationFrame loop (core/04-loop.js). All
+   systems subscribe with update(dt) and render(). No stray timers
+   except the audio scheduler.
+ - Canvas 2D: code rain, node map, tunnel transition, static.
+   Cap devicePixelRatio at 2. Offscreen pre-render of glyph atlases
+   for the rain (draw cached glyph bitmaps, not fillText per char).
+ - Inline SVG: analog trace gauge, icons, stamp shapes.
+ - Web Audio API: all SFX and music. Compressor + limiter on the
+   master. Lookahead scheduler for music.
+ - localStorage via a safe wrapper (try/catch, memory fallback).
+ - Seeded RNG (mulberry32) for puzzles, music variation and Daily.
+ - Page Visibility API: pause loop, rain and music when hidden.
+ - Optional: navigator.vibrate for mobile haptics (toggle).
+ - Fonts: system monospace stack ONLY:
+   ui-monospace, "JetBrains Mono", "Cascadia Mono", Menlo, Consolas,
+   monospace. Optionally embed one OFL woff2 as base64.
+ - Testing: tests/test.html (plain browser page) + manual checklist.
+
+---------------------------------------------------------------------
+4. BEST UI/UX
+---------------------------------------------------------------------
+4.1 DESIGN PILLARS
+ 1. Fast to understand: a new player types their first command in
+    under 10 seconds.
+ 2. Never stuck: hint ladder, clear errors, quick retry (< 2s).
+ 3. Tension you can see and hear: trace is ALWAYS visible and drives
+    visuals, sound and music.
+ 4. Noir cinema: restraint. Few colors, strong contrast, big mood.
+ 5. Respect the player: skippable cutscenes, reduce motion, volume
+    controls, no dark patterns.
+
+4.2 THEME "KERNEL NOIR"
+ Colors (css/tokens.css)
+  --ink #07090c  --panel #0d1117  --panel-2 #141a22
+  --amber #ffb000 (primary)  --amber-mid #d99a1a  --amber-dim #a86f00
+  --ice #38e1ff (defenses, links, map)  --alarm #ff2e63 (trace,
+  errors)  --ok #5dff9a (success, use sparingly)
+  --paper #efe6cf  --stamp #b3202a  --line rgba(255,176,0,.3)
+ Type scale (monospace only): 11 / 13 / 15 / 17 / 22 / 32 / 56 / 96.
+  Labels uppercase, letter-spacing .12em. Terminal 15 to 16px,
+  line-height 1.5. Never put essential text in --amber-dim.
+ Spacing: 4px base (4, 8, 12, 16, 24, 32, 48).
+ Borders: 1px hairlines in --line. Corners: square (0 radius).
+  Noir = hard edges. Panels have small corner brackets, not shadows.
+ Depth: layered black, one amber glow source, never rainbow.
+
+4.3 SCREEN FLOW
+ BOOT -> MENU -> (New Run | Continue | Daily Heist | Leaderboard |
+ Settings | How to Play) -> BRIEFING (dossier) -> JACK-IN ->
+ GAMEPLAY -> RESULT (score, rank stamp) -> next level ... -> L6 ->
+ CHOICE -> ENDING (A or B) -> CREDITS -> MENU.
+ Pause (Esc): Resume, Hint, Settings, Quit level (penalty).
+
+4.4 GAMEPLAY LAYOUT
+ Desktop: 3 panes + HUD
+  Top HUD (64px): TRACE gauge (left), level name + timer (center),
+   score ticker + difficulty (right).
+  Left (22%): TARGET MAP canvas, nodes light up as you progress.
+  Center (50%): TERMINAL, the focus. Biggest, brightest.
+  Right (28%): VESPER COMMS on top, TOOLS slots + INVENTORY below.
+  Bottom: command chips row (help, ls, cat, scan, hint ...).
+ Mobile (<= 700px): terminal fills the screen. Bottom tab bar:
+  TERMINAL | MAP | COMMS | TOOLS. Chips bar sticks above the
+  keyboard. Trace gauge collapses to a slim bar at the top.
+  Tap targets >= 44px. Safe-area insets respected.
+
+4.5 TERMINAL UX (the heart of the game)
+ - Prompt: "ghost@vault9:~$ " with blinking block cursor.
+ - Output line types with distinct styles: sys (dim), ok (green),
+   warn (amber), err (alarm), intel (paper-colored, boxed),
+   comms (cyan), story (italic).
+ - Ghost-text autocomplete: dim suggestion after the cursor, Tab
+   accepts. Unknown command -> "did you mean ...?" (Levenshtein).
+ - Up/Down history. Ctrl+L clear. Ctrl+C cancels typing.
+ - Errors are in-world and teach: "ACCESS DENIED: that door does
+   not know you. Try: knock <port> ..."
+ - Every level starts with a 3-line "OBJECTIVE / TOOLS / TIP" card.
+ - Hint ladder (3 steps), each costs trace + score, labeled before
+   use: "HINT 1/3 (+8 TRACE). Proceed? y/n".
+ - Auto-scroll with a "jump to latest" pill if the player scrolled up.
+ - Long outputs typewriter at a skippable speed (any key = instant).
+
+4.6 COMMS PANEL (VESPER)
+ Chat bubbles, handler name in cyan, typing dots 600 to 1400 ms
+ before each message, subtle "signal quality" bars that degrade as
+ trace rises. Key story lines also echo in the terminal so nothing
+ is missed on mobile.
+
+4.7 FEEDBACK AND JUICE RULES
+ - Every action gets feedback within 100 ms (visual + sound).
+ - Wrong input: line flashes alarm, tiny shake, error buzz, trace
+   ticks up with a "+8" float label near the gauge.
+ - Right input: ping, line glows ok, node lights on the map.
+ - Level complete: ledger-scramble reveal, rank stamp thunk.
+ - Fail: static + dead terminal 1.5s, then "RETRY" focused by
+   default (Enter retries).
+
+4.8 MENU AND SETTINGS
+ Menu is a boot-style list navigable by arrows/Enter/tap. Settings:
+  Master / SFX / Music volume sliders, Mute, Reduce motion, Quality
+  (Auto/High/Med/Low), Font size (S/M/L), High contrast, Haptics,
+  Difficulty, Export save, Import save, Reset progress (confirm).
+
+4.9 COPY TONE
+ Dry, short, noir. Handler is confident and sarcastic. Never insult
+ the player. All strings live in data/story-text.js.
+  Example VESPER: "You are in. Do not touch anything shiny."
+
+4.10 ACCESSIBILITY
+ - Contrast AA+ (amber on ink passes). Visible focus rings.
+ - ARIA live region mirrors important terminal output.
+ - Full keyboard control. Skippable animations and cutscenes.
+ - Reduce Motion kills shake, flicker, glitch, rain, tunnel and
+   replaces them with fades. Audio stays (separate controls).
+ - No flashing faster than 3 times per second (photosensitivity).
+ - Colorblind safe: trace uses icon + text + number, never color
+   alone.
+
+---------------------------------------------------------------------
+5. BEST ANIMATIONS
+---------------------------------------------------------------------
+EASING TOKENS (css/tokens.css)
+ --ease-out cubic-bezier(.2,.8,.2,1)
+ --ease-in-out cubic-bezier(.65,0,.35,1)
+ --ease-snap cubic-bezier(.3,1.4,.5,1)
+DURATIONS: 120ms micro, 220ms ui, 400ms panel, 800ms scene.
+
+LIST (trigger -> effect -> spec -> reduce-motion fallback)
+ 1. CRT TURN-ON (boot): black -> bright horizontal line -> expands
+    vertically. 500ms, ease-out. Fallback: 200ms fade.
+ 2. BOOT TEXT: BIOS-style lines typed at 18ms/char with random
+    80 to 200ms line pauses. Fallback: appear instantly.
+ 3. TITLE GLITCH: GHOSTWIRE flickers in; RGB split (cyan/red
+    copies offset 3 to 5px) for 300ms, then settles. Fallback: fade.
+ 4. TYPEWRITER OUTPUT: 8 to 14 ms/char, speed up on long lines,
+    any key skips. Fallback: instant.
+ 5. TRACE NEEDLE: spring physics (damped), tiny jitter proportional
+    to trace^2, overshoots 4% on jumps. Fallback: smooth linear.
+ 6. TRACE VIGNETTE: screen-edge alarm glow opacity = (trace/100)^2;
+    scanline intensity rises with trace. Fallback: static glow.
+ 7. SCREEN SHAKE: on wrong input, 120ms, 3px amplitude, decays.
+    On stamp/thunk 200ms, 5px. Fallback: none.
+ 8. SLICE GLITCH: random horizontal slices (clip-path) displaced
+    +-8px for 80 to 160ms; used on big events. Fallback: none.
+ 9. JACK-IN TUNNEL (level start): canvas perspective lines rushing
+    to a vanishing point, 900ms, camera pushes forward, ends on a
+    white flash 60ms. Skippable. Fallback: 250ms fade to level.
+10. DOSSIER SLIDE-IN: paper card slides from right, rotates from
+    4deg to -0.6deg, 400ms ease-snap; CLASSIFIED stamp thunks 120ms
+    later (scale 1.6 -> 1, with sound + shake). Fallback: fade.
+11. LEDGER SCRAMBLE (decode): each char cycles random glyphs and
+    resolves left-to-right over 700 to 1200ms. Used for solved
+    ciphers, ranks, ending titles. Fallback: instant text.
+12. NODE MAP: pulse ring (1.2s loop) on active node, line draws
+    along edges with dash-offset animation, ICE patrol = sweeping
+    cyan arc that visibly telegraphs its next position 1s early.
+13. TOOL USE: SPOOFER = gauge needle slides back with a blue
+    ripple across the HUD, 500ms.
+14. SCORE TICKER: numbers roll digit by digit (odometer), 600ms.
+15. RANK STAMP: rank text scrambles then stamps with ink-bleed
+    scale pop. Fallback: fade.
+16. LINE CUT (fail): screen collapses to a horizontal line then a
+    dot (old TV power-off) 350ms, then static canvas 1.5s with
+    "TRACE COMPLETE: LINE CUT". Fallback: cut to black + text.
+17. VICTORY: ledger rows scramble to resolve, green sweep line,
+    rank stamp, confetti-free (noir, no confetti).
+18. ENDINGS: A "Ghost": screen decays into dots and drifts away,
+    final text fades. B "Whistle": headlines scramble in and stack
+    like a news feed, AURUM logo glitches out.
+19. CODE RAIN: 3 depth layers (slow dim, mid, fast bright), glyph
+    atlas, speed scales slightly with trace. Paused when hidden.
+20. BUTTON/CHIP PRESS: 80ms scale .96, amber flash border.
+21. FOCUS INDICATOR: 2px amber outline with 2px offset, 120ms.
+
+TECHNICAL RULES
+ - Animate only transform and opacity in CSS. Canvas for the rest.
+ - Everything driven by the master loop or CSS; no setInterval
+   animations. Use dt for frame-rate independence.
+ - Respect quality tier: LOW disables rain, glitch slices, tunnel
+   (uses fade) and halves static resolution.
+
+---------------------------------------------------------------------
+6. BEST SOUND DESIGN (SFX, all synthesized)
+---------------------------------------------------------------------
+6.1 AUDIO ENGINE (audio/engine.js)
+ - One AudioContext, created on the first user gesture. Resume on
+   every gesture if suspended. Show "CLICK TO ENABLE AUDIO" on the
+   menu if still suspended.
+ - Bus graph:
+   sfxBus ----\
+   musicBus ---+--> masterGain -> compressor -> limiter -> out
+   ambBus -----/
+   Compressor: threshold -18dB, ratio 4, attack 5ms, release 120ms.
+   Limiter: second compressor, threshold -3dB, ratio 20, attack 1ms.
+ - Default levels: master 0.8, sfx 0.9, music 0.5, ambience 0.35.
+ - Ducking: when VESPER speaks or a stinger plays, music drops 4dB
+   for 600ms (gain ramp), then returns.
+ - Shared noise buffers: white (2s), pink (2s), loop them. Create
+   once. Disconnect/stop nodes when finished (no leaks).
+ - Max polyphony for SFX: 16. Drop the oldest low-priority sound.
+ - Randomize pitch +-6% and gain +-10% on repeated sounds so they
+   never feel robotic.
+ - Pause everything when the tab is hidden. Persist mute/volumes.
+
+6.2 SFX RECIPES (name: construction)
+ key_tick: noise burst 8ms through bandpass 2.4kHz Q4 + triangle
+   click 1.2kHz 12ms. Gain 0.15. Random pitch. Throttle: max 25/s.
+ key_enter: sine 140Hz -> 70Hz drop 90ms + noise burst 20ms,
+   lowpass 800Hz. Gain 0.3.
+ key_backspace: key_tick pitched down 20%, quieter.
+ ok_ping: two sines 880Hz then 1318Hz (80ms apart), exp decay
+   260ms, light feedback delay 120ms (0.25). Gain 0.25.
+ error_buzz: sawtooth 110Hz + 117Hz detune through lowpass 700Hz,
+   180ms, fast attack, exp release. Gain 0.3.
+ trace_tick: Geiger-style click (noise 3ms, highpass 3kHz). Rate =
+   0.5/s at trace 10 up to 14/s at trace 95. Gain 0.1.
+ trace_alarm: square 440Hz/660Hz alternating, pulse rate scales
+   from 1.2Hz (trace 70) to 4Hz (trace 95), lowpass 1.8kHz. Only
+   above trace 70. Gain 0.18. Never faster than 4 pulses/s.
+ hint_open: soft rising sine glide 400 -> 700Hz, 200ms.
+ hint_cost: error_buzz at 50% gain + trace_tick x2.
+ tool_use (spoofer): filtered noise sweep (lowpass 300 -> 4000Hz
+   over 500ms) + sine 330Hz fade. Gain 0.25.
+ node_light: sine 1000Hz 60ms with a tiny pitch up.
+ dossier_slide: paper-like noise swoosh (bandpass 1.5kHz sweep
+   down, 250ms).
+ stamp_thunk: sine 90Hz -> 40Hz 200ms + noise burst 30ms lowpass
+   500Hz. Gain 0.5. Triggers screen shake in sync.
+ decode_loop: while scrambling, rapid triangle blips (60ms steps)
+   random pitch from the minor pentatonic; final tone = ok_ping.
+ glitch: noise through waveshaper (bitcrush-like, 4 levels) 80 to
+   160ms + random bandpass sweep. Gain 0.2.
+ jack_in: rising saw sweep 80Hz -> 900Hz over 900ms through a
+   resonant lowpass + noise whoosh, ends with a short sub boom.
+ level_complete: arpeggio A4 C5 E5 A5 (square, 70ms steps) + ok_ping
+   on the last note.
+ line_cut (fail): tape-stop effect: pitch/detune falls to -2400
+   cents over 700ms on a sustained saw + white noise burst +
+   power-down thump.
+ boot_hum: saw 55Hz + 110Hz, lowpass 200Hz, 1.2s fade in. Ambient.
+ ui_select (menu): sine 600Hz 40ms. ui_back: 450Hz 40ms.
+ whistle_ending: reverb-y stack of A major chord rising (A4 C#5 E5)
+   to signal resolution. ghost_ending: single low pad fading to
+   silence over 6s.
+6.3 AMBIENCE (ambBus)
+ Low server-room hum: pink noise lowpass 400Hz at gain 0.05 + a
+ slow 0.1Hz LFO on filter cutoff. Rises slightly with trace.
+
+---------------------------------------------------------------------
+7. BEST MUSIC (procedural, synthesized, no files)
+---------------------------------------------------------------------
+7.1 CONCEPT
+ Dark synth-noir. Slow pulsing bass, wide detuned pads, sparse arps
+ and a minimal beat that BUILDS as the trace climbs. Music reacts
+ to gameplay: intensity 0..1 follows trace/100 plus event spikes.
+
+7.2 SCHEDULER (audio/music.js)
+ "Tale of two clocks" pattern: a setInterval of 25ms looks ahead
+ 100ms and schedules notes at exact AudioContext times. Track
+ nextNoteTime and step (16 steps per bar). Seeded RNG gives small
+ variations (fills, arp direction) so loops do not feel static.
+ API:
+  GW.music.start(sceneId)   GW.music.stop(fadeMs)
+  GW.music.setIntensity(x)  GW.music.stinger(name)
+  GW.music.setTempo(bpm, rampMs)
+
+7.3 MUSICAL DATA (data/music-data.js)
+ Key: A natural minor. freq = 440 * 2^((midi - 69) / 12).
+ Chords (MIDI): Am [57,60,64]  F [53,57,60]  C [60,64,67]
+                G [55,59,62]   Dm [62,65,69] E [52,56,59]
+ Progressions (1 bar each):
+  Menu/L0:  Am | Am | F | F            (calm, 76 to 90 BPM)
+  L1, L2:   Am | F | C | G
+  L3:       Am | F | Dm | E            (cipher, 104 BPM)
+  L4:       Am | G | F | E             (investigative, 108 BPM)
+  L5:       Am | Am | F | E            (chase, 112 BPM)
+  L6 boss:  Am | F | Dm | E | Am | G | F | E   (124 BPM)
+ Scale for arps: A minor pentatonic [57,60,62,64,67] across 2 octaves.
+
+7.4 LAYERS AND INSTRUMENTS (all oscillator-based)
+ L1 DRONE (always): sawtooth A1 55Hz + sub sine 55Hz, lowpass
+   120Hz with slow LFO. Gain 0.25.
+ L2 PAD (always): 3 detuned saws per chord note (+-7 cents),
+   lowpass 900Hz, slow attack 400ms, release 800ms, chorus via two
+   short delays modulated by a 0.3Hz LFO. Changes chord each bar.
+ L3 ARP (intensity > 0.15): pulse/square wave, 16th notes,
+   pattern indexes over chord tones [0,1,2,1, 0,2,3,2 ...], gain
+   0.08, ping-pong delay 3/16 note, feedback 0.35.
+ L4 BASS (intensity > 0.3): saw -> lowpass 400Hz (envelope
+   sweep per note), root of the chord, 16-step pattern:
+   [R . . R  . . R .  R . . R  . R . .]  (R = root, octave 1 to 2).
+ L5 PERCUSSION (intensity > 0.45):
+   kick: sine 150Hz -> 45Hz in 120ms, gain 0.6.
+   hat: noise highpass 7kHz, 30ms; open hat 120ms on step 14.
+   clap/snare: noise bandpass 1.8kHz 120ms with short reverb tail.
+   Patterns (16 steps):
+    kick  intensity .45: steps 0, 10     | .65+: 0, 4, 8, 12
+    hat   .45: 2, 6, 10, 14              | .65+: every 16th, accents
+    clap  .65+: 4, 12
+ L6 TENSION (intensity > 0.75): noise riser building over 4 bars,
+   heartbeat (sine 55Hz double-thump every beat), filter cutoff of
+   pad opens to 3kHz, tempo +8 BPM (ramped over 2s), alarm-like
+   stab on beat 1 every 2 bars.
+ L7 STINGERS: short one-shots that duck the music:
+   level_start (rising pad swell), level_complete (A minor to A
+   major lift, 2 bars), fail (tape stop, music cut), choice
+   (all layers drop except drone + low pad: silence before the
+   decision), ending_a (drone fades 6s), ending_b (bright pad +
+   arp resolving to major, 8s).
+
+7.5 SCENE MAP
+ Menu: drone + pad only, 76 BPM, no drums.
+ L0 Boot Camp: drone + pad + soft arp, 90 BPM, intensity capped .3.
+ L1..L5: base layers + intensity from trace; tempo per section 7.3.
+ L6: extra 8-bar progression, intensity floor .4, boss tension at
+   trace > 60 and during phase 3.
+ Result screen: pad only. Ending A/B: stingers above.
+
+7.6 MIX RULES
+ - Music bus peaks under -12 dBFS, SFX can sit above it.
+ - Duck music 4 dB when VESPER message arrives or any stinger.
+ - Crossfade between scenes over 1.5s. Never hard cut except fail.
+ - Separate sliders for Music and SFX. Music can be turned off
+   while keeping SFX (default both on, music at 0.5).
+ - Start music only after first gesture. Stop on hidden tab.
+
+---------------------------------------------------------------------
+8. PERFORMANCE, QUALITY TIERS, ACCESSIBILITY
+---------------------------------------------------------------------
+ Budgets: boot under 1.5s, input latency under 50ms, 60fps on a
+ mid-range phone, JS under 400 KB unminified total, whole project under 3 MB.
+ QUALITY TIERS (auto via FPS monitor: avg frame > 24ms for 2s drops
+ a tier; never auto-raises mid-level)
+  HIGH:  rain 3 layers, glitch slices, tunnel, grain, shake.
+  MED:   rain 1 layer, simple glitch, tunnel at half resolution.
+  LOW:   no rain, no slices, fade transitions, static at 1/4 res.
+ Audio fallback: if AudioContext is missing, game runs silent with
+ a small notice. Never crash on audio/storage failure.
+
+---------------------------------------------------------------------
+9. README.md (create verbatim)
+---------------------------------------------------------------------
+# GHOSTWIRE
+
+A cinematic, offline hacking-puzzle game. You are a hacker on a
+one-night heist against the fictional AURUM Orbital Bank. Beat seven
+layers of security before the TRACE hits 100. Your handler, VESPER,
+is not telling you everything.
+
+All hacking in this game is fictional and simulated. Nothing here
+touches real systems.
+
+## Play in 10 seconds
+1. Open the project folder.
+2. Double-click `index.html`.
+3. Type `help` and press Enter.
+
+No install. No internet. No account. Works offline.
+
+## No coding needed
+Every puzzle is logic, patterns and deduction. The game gives you
+helper commands and teaches each one in Level 0.
+
+## Controls
+| Action | Keyboard | Phone |
+|---|---|---|
+| Run command | Enter | Tap chip or type |
+| Autocomplete | Tab | Tap suggestion |
+| History | Up / Down | - |
+| Clear screen | Ctrl+L | - |
+| Pause | Esc | Menu button |
+| Hint | `hint` | Hint chip (costs trace) |
+
+## Levels
+0 Boot Camp, 1 KnockKnock, 2 CrackLine, 3 CipherWorks,
+4 LogHound, 5 GraphRunner, 6 Vault-9.
+
+## Modes
+- Rookie: more hints, slow trace.
+- Operator: the intended experience.
+- Ghost: no hints, fast trace, tight attempts.
+- Daily Heist: same puzzles for everyone each day, with a streak.
+
+## Endings
+Two. Ghost or Whistle. Your final choice decides what happens to the
+ledger, to AURUM and to VESPER.
+
+## Tips
+- Read every file with `cat`. Clues hide in plain sight.
+- Hints cost trace and score. Use them wisely.
+- Save your SPOOFER for the vault.
+- Headphones recommended. The soundtrack reacts to your trace.
+
+## Settings
+Volume (master, SFX, music), reduce motion, quality, font size, high
+contrast, haptics. You can export and import your save as text.
+
+## Tech
+HTML, CSS, vanilla JavaScript, Canvas, SVG and the Web Audio API.
+Zero dependencies. All sound and music are generated live, there
+are no audio files. Works from `file://`.
+
+## Project structure
+See `docs/DESIGN.md` and `AGENT.md`.
+
+## Credits
+Designed and built by Karthik.
+
+## License
+See `LICENSE.txt`.
+
+---------------------------------------------------------------------
+10. AGENT.md (create verbatim)
+---------------------------------------------------------------------
+# AGENT.md: rules for AI coding agents working on GHOSTWIRE
+
+You are building GHOSTWIRE, an offline browser game. Read this file
+fully before touching code. These rules override your defaults.
+
+## 1. Project in one paragraph
+A cinematic terminal-style hacking-puzzle game: 7 levels, TRACE
+meter, handler VESPER, two endings, three difficulties, Daily Heist.
+Theme: "Kernel Noir" (amber phosphor on black, cyan defenses, alarm
+red for trace). Everything is fictional.
+
+## 2. Hard rules (never break)
+1. Offline only. No CDN, web fonts, remote images, API or analytics.
+2. No backend, no build step, no npm, no bundler, no frameworks.
+3. Must run by double-clicking index.html (file://).
+   - No ES modules (no import/export).
+   - No fetch/XHR for local files.
+   - Level and story data are .js files, not .json.
+4. All audio is synthesized with Web Audio. No audio files, no
+   samples, no base64 audio.
+5. One global namespace: window.GW. Every file is an IIFE.
+6. Never use eval, new Function, document.write.
+7. Use textContent, never innerHTML with player-provided text.
+8. Wrap localStorage and audio calls in try/catch. The game must
+   work with storage blocked and with audio unavailable.
+9. No real exploits, scanning, brute-forcing or network access.
+   Commands are simulated by the game's own parser only.
+10. Fictional content only: no real brands, people or public IPs
+    (use 10.x.x.x or 192.0.2.x).
+11. This project stands alone. Do not add branding, names, assets or
+    content from any other project or personal brand.
+
+## 3. Folder and file contracts
+Follow the structure in GHOSTWIRE_FULL_SPEC.txt section 2 exactly.
+Do not rename or move files without saying so in your report.
+Script order in index.html: core, systems, audio, fx, ui, data,
+levels, main.js.
+ - GW.events: on, off, emit.   GW.store: get, set, save, load, reset,
+   export, import.   GW.parser: register({name, aliases, help, run}).
+ - GW.terminal: print, printLines, clear, type.
+ - GW.trace: add, reduce, get, reset.   GW.score: startLevel,
+   finishLevel, calc, rank.   GW.story: send, choice.
+ - GW.audio.sfx.play(name, opts).   GW.music: start, stop,
+   setIntensity, stinger, setTempo.
+ - Levels register with GW.levels.register({id, title, brief, par,
+   setup, commands, onCommand, isComplete, hints, teardown}).
+Every level must be self-contained, clean up in teardown(), and have
+a seeded generator that PROVES solvability before showing a puzzle.
+
+## 4. Code conventions
+ - ES2020, 2-space indent, semicolons, single quotes, const/let.
+ - Files under ~400 lines. One responsibility per file.
+ - Comment every public contract, not every line.
+ - All UI strings and story text only in data/story-text.js.
+ - All colors, spacing, durations and easings from tokens.css
+   variables. No magic hex values in other CSS files.
+ - Animate transform and opacity only in CSS. Canvas for the rest.
+ - One requestAnimationFrame loop (core/04-loop.js). No stray
+   setInterval except the audio scheduler.
+ - Frame-rate independent logic: use dt, not frame counts.
+
+## 5. Design and audio source of truth
+ - UI/UX: spec section 4. Animations: section 5.
+ - SFX: section 6. Music: section 7. Quality tiers: section 8.
+ - Honor prefers-reduced-motion and the Reduce Motion setting.
+ - No flashing faster than 3 times per second.
+ - Music and SFX are synthesized; follow the recipes and keep the
+   mix limits (music under -12 dBFS, master limiter on).
+
+## 6. Workflow
+ 1. Read the task. Restate it in two lines.
+ 2. Plan the smallest set of files to touch.
+ 3. Implement in small steps.
+ 4. Verify: open tests/test.html and run the manual checks for the
+    area you touched (see Definition of Done).
+ 5. Report (format below) and wait for the next instruction.
+Do not jump ahead to later phases. Do not refactor unrelated code.
+
+## 7. Definition of done (for any change)
+ [ ] index.html opens from file:// with zero console errors.
+ [ ] No network requests (DevTools Network tab is empty).
+ [ ] tests/test.html passes (200 seeds per level solvable).
+ [ ] Works with localStorage disabled and with audio unsupported.
+ [ ] Mobile 360px wide: no horizontal scroll, chips usable.
+ [ ] Reduce Motion and High Contrast modes still look right.
+ [ ] No debug logs, TODOs or placeholder text left behind.
+ [ ] Frame rate holds on LOW quality tier.
+
+## 8. Report format (end of every task)
+ - What I built/changed (bullets, file names).
+ - How I verified it (what I ran/checked).
+ - Known issues or risks.
+ - Suggested next step.
+Keep it short. Be honest: if something is not tested, say so.
+
+## 9. When unsure
+Ask one short question instead of guessing, unless a rule above
+already answers it. Never silently change a hard rule, a contract,
+or the folder structure.
+
+## 10. Kickoff prompts
+ Phase 1: "Read AGENT.md and GHOSTWIRE_FULL_SPEC.txt. Scaffold the
+  folder structure, index.html with script order, tokens.css,
+  base.css, core files 00 to 08. Result: a working terminal with
+  help, ls, clear, history and autocomplete."
+ Phase 2: "Build the Kernel Noir HUD and layout: trace gauge, three
+  panes, mobile tabs, chips, CRT/fx.css, boot sequence and menu."
+ Phase 3: "Build audio: engine, SFX recipes (section 6), mixer, then
+  the procedural music (section 7) with intensity from trace."
+ Phase 4: "Build systems (trace, score, story, daily) and levels
+  L0 to L3 with seeded solvable generators."
+ Phase 5: "Build L4 to L6, both endings, Daily Heist."
+ Phase 6: "Run the Definition of Done. Fix every failure. Optimize."
+
+---------------------------------------------------------------------
+END OF SPEC
+---------------------------------------------------------------------

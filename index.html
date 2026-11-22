@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>GHOSTWIRE</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/terminal.css">
+  <link rel="stylesheet" href="css/hud.css">
+  <link rel="stylesheet" href="css/comms.css">
+  <link rel="stylesheet" href="css/dossier.css">
+  <link rel="stylesheet" href="css/map.css">
+  <link rel="stylesheet" href="css/screens.css">
+  <link rel="stylesheet" href="css/fx.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+  <div class="crt-overlay" aria-hidden="true"></div>
+  <main class="app-shell">
+    <section id="boot-screen" class="boot-screen" aria-label="Boot sequence">
+      <div class="boot-mark">GW</div>
+      <div id="boot-lines" class="boot-lines" aria-live="polite"></div>
+      <button id="skip-boot" class="text-button" type="button">SKIP</button>
+    </section>
+
+    <section id="menu-screen" class="menu-screen" hidden aria-label="Main menu">
+      <div class="menu-title">
+        <span class="menu-kicker">AURUM // NIGHT 09</span>
+        <h1>GHOSTWIRE</h1>
+        <p>One night. One vault. No second key.</p>
+      </div>
+      <nav class="menu-list" aria-label="Main menu">
+        <button class="menu-item" type="button" data-action="new-run"><span>01</span> NEW RUN</button>
+        <button class="menu-item" type="button" data-action="continue" disabled><span>02</span> CONTINUE</button>
+        <button class="menu-item" type="button" data-action="daily"><span>03</span> DAILY HEIST</button>
+        <button class="menu-item" type="button" data-action="leaderboard"><span>04</span> LEADERBOARD</button>
+        <button class="menu-item" type="button" data-action="settings"><span>05</span> SETTINGS</button>
+        <button class="menu-item" type="button" data-action="how-to"><span>06</span> HOW TO PLAY</button>
+      </nav>
+    </section>
+
+    <section id="settings-screen" class="settings-screen" hidden aria-label="Settings">
+      <header class="settings-header">
+        <div>
+          <span class="menu-kicker">SYSTEM</span>
+          <h2>Settings</h2>
+        </div>
+        <button id="settings-back" class="text-button" type="button">BACK</button>
+      </header>
+      <div class="settings-grid">
+        <label>Master <input type="range" min="0" max="100" value="80"></label>
+        <label>SFX <input type="range" min="0" max="100" value="90"></label>
+        <label>Music <input type="range" min="0" max="100" value="50"></label>
+        <label class="toggle-row"><span>Mute</span><input type="checkbox"></label>
+        <label class="toggle-row"><span>Reduce motion</span><input type="checkbox" id="reduce-motion"></label>
+        <label>Quality
+          <select><option>Auto</option><option>High</option><option>Medium</option><option>Low</option></select>
+        </label>
+        <label>Font size
+          <select><option>Small</option><option selected>Medium</option><option>Large</option></select>
+        </label>
+        <label class="toggle-row"><span>High contrast</span><input type="checkbox"></label>
+        <label class="toggle-row"><span>Haptics</span><input type="checkbox"></label>
+        <label>Difficulty
+          <select><option>Rookie</option><option selected>Operator</option><option>Ghost</option></select>
+        </label>
+        <button class="text-button" type="button" data-setting="export">EXPORT SAVE</button>
+        <button class="text-button" type="button" data-setting="import">IMPORT SAVE</button>
+        <button class="text-button danger" type="button" data-setting="reset">RESET PROGRESS</button>
+      </div>
+    </section>
+
+    <section id="game-screen" class="game-screen" hidden aria-label="GHOSTWIRE gameplay">
+      <header class="hud">
+        <div class="trace-widget">
+          <svg class="trace-gauge" viewBox="0 0 180 76" role="img" aria-label="Trace 12 percent">
+            <path class="gauge-track" d="M18 64 A58 58 0 0 1 162 64" pathLength="100"></path>
+            <path id="trace-arc" class="gauge-arc" d="M18 64 A58 58 0 0 1 162 64" pathLength="100"></path>
+            <line id="trace-needle" class="gauge-needle" x1="90" y1="64" x2="90" y2="18"></line>
+            <text x="90" y="52" text-anchor="middle" class="gauge-number">12</text>
+            <text x="90" y="66" text-anchor="middle" class="gauge-label">TRACE</text>
+          </svg>
+        </div>
+        <div class="level-widget">
+          <span class="hud-label">DEMO // SECURE SHELL</span>
+          <strong id="hud-level">L0 // BOOT CAMP</strong>
+          <time id="hud-time">00:00</time>
+        </div>
+        <div class="score-widget">
+          <span class="hud-label">SCORE</span>
+          <strong id="hud-score">000000</strong>
+          <span id="hud-difficulty">OPERATOR</span>
+        </div>
+      </header>
+
+      <div class="game-grid">
+        <aside id="map-pane" class="map-pane panel-pane" aria-label="Target map">
+          <div class="pane-title">TARGET MAP</div>
+          <div class="map-frame">
+            <span class="map-node active"></span>
+            <span class="map-node"></span>
+            <span class="map-node"></span>
+            <span class="map-node"></span>
+          </div>
+        </aside>
+
+        <section id="terminal-pane" class="terminal-window" aria-label="GHOSTWIRE terminal">
+          <div class="terminal-bar">
+            <span>AURUM // Vault-9 // SECURE SHELL</span>
+            <button id="menu-button" class="text-button" type="button">MENU</button>
+          </div>
+          <div id="terminal-output" class="terminal-output" role="log" aria-live="polite">
+            <div class="terminal-line sys">GHOSTWIRE TERMINAL // offline build</div>
+            <div class="terminal-line sys">Type "help" to begin.</div>
+            <div class="terminal-input-row">
+              <span class="terminal-prompt">ghost@vault9:~$ </span>
+              <span class="terminal-input-wrap">
+                <input id="terminal-input" class="terminal-input" autocomplete="off"
+                  autocapitalize="off" spellcheck="false" aria-label="Terminal command">
+                <span id="terminal-ghost" class="terminal-ghost" aria-hidden="true"></span>
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <aside id="comms-pane" class="comms-pane panel-pane" aria-label="VESPER communications">
+          <div class="pane-title">VESPER // COMMS</div>
+          <div class="signal-bars" aria-label="Signal quality"><i></i><i></i><i></i><i></i></div>
+          <div class="chat-bubble">You are in. Do not touch anything shiny.</div>
+          <div class="pane-title tools-title">TOOLS</div>
+          <div class="tool-slots"><span>SPOOFER</span><span>EMPTY</span><span>EMPTY</span></div>
+        </aside>
+      </div>
+
+      <div class="chips-bar" aria-label="Command chips">
+        <button type="button" data-command="help">help</button>
+        <button type="button" data-command="ls">ls</button>
+        <button type="button" data-command="cat ">cat</button>
+        <button type="button" data-command="scan">scan</button>
+        <button type="button" data-command="hint">hint</button>
+      </div>
+
+      <nav class="mobile-tabs" aria-label="Gameplay panes">
+        <button type="button" class="active" data-pane="terminal">TERMINAL</button>
+        <button type="button" data-pane="map">MAP</button>
+        <button type="button" data-pane="comms">COMMS</button>
+        <button type="button" data-pane="tools">TOOLS</button>
+      </nav>
+    </section>
+  </main>
+
+  <script src="js/core/00-namespace.js"></script>
+  <script src="js/core/01-rng.js"></script>
+  <script src="js/core/02-events.js"></script>
+  <script src="js/core/03-store.js"></script>
+  <script src="js/core/04-loop.js"></script>
+  <script src="js/core/05-quality.js"></script>
+  <script src="js/core/06-input.js"></script>
+  <script src="js/core/07-parser.js"></script>
+  <script src="js/core/08-terminal.js"></script>
+  <script src="js/systems/trace.js"></script>
+  <script src="js/systems/score.js"></script>
+  <script src="js/systems/story.js"></script>
+  <script src="js/systems/levels.js"></script>
+  <script src="js/systems/daily.js"></script>
+  <script src="js/audio/engine.js"></script>
+  <script src="js/audio/noise.js"></script>
+  <script src="js/audio/sfx.js"></script>
+  <script src="js/audio/music.js"></script>
+  <script src="js/audio/mixer.js"></script>
+  <script src="js/fx/crt.js"></script>
+  <script src="js/fx/rain.js"></script>
+  <script src="js/fx/glitch.js"></script>
+  <script src="js/fx/decode.js"></script>
+  <script src="js/fx/tunnel.js"></script>
+  <script src="js/fx/static.js"></script>
+  <script src="js/ui/hud.js"></script>
+  <script src="js/ui/map.js"></script>
+  <script src="js/ui/comms.js"></script>
+  <script src="js/ui/dossier.js"></script>
+  <script src="js/ui/screens.js"></script>
+  <script src="js/ui/toast.js"></script>
+  <script src="js/data/story-text.js"></script>
+  <script src="js/data/fake-names.js"></script>
+  <script src="js/data/music-data.js"></script>
+  <script src="js/levels/L0-bootcamp.js"></script>
+  <script src="js/levels/L1-knockknock.js"></script>
+  <script src="js/levels/L2-crackline.js"></script>
+  <script src="js/levels/L3-cipherworks.js"></script>
+  <script src="js/levels/L4-loghound.js"></script>
+  <script src="js/levels/L5-graphrunner.js"></script>
+  <script src="js/levels/L6-vault9.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

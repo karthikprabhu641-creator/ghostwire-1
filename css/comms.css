@@ -1,0 +1,22 @@
+.story-choices {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.story-choices button {
+  min-height: 44px;
+  padding: var(--space-2);
+  border: 1px solid rgba(56, 225, 255, .4);
+  border-radius: 0;
+  background: var(--panel-2);
+  color: var(--paper);
+  text-align: left;
+  cursor: pointer;
+}
+
+.story-choices button:hover,
+.story-choices button:focus-visible {
+  border-color: var(--ice);
+  color: var(--ice);
+}

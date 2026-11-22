@@ -1,0 +1,140 @@
+@media (max-width: 700px) {
+  .app-shell {
+    padding: 0;
+  }
+
+  .boot-screen,
+  .menu-screen,
+  .settings-screen {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .menu-screen {
+    grid-template-columns: 1fr;
+    align-content: center;
+  }
+
+  .menu-title h1 {
+    font-size: 56px;
+  }
+
+  .menu-title p {
+    display: none;
+  }
+
+  .menu-item {
+    min-height: 44px;
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .game-screen {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    grid-template-rows: 64px 1fr 44px 56px;
+  }
+
+  .hud {
+    grid-template-columns: 92px 1fr 92px;
+  }
+
+  .trace-widget {
+    position: relative;
+    width: 92px;
+  }
+
+  .trace-gauge {
+    width: 92px;
+  }
+
+  .gauge-track,
+  .gauge-arc,
+  .gauge-needle,
+  .gauge-number,
+  .gauge-label {
+    display: none;
+  }
+
+  .trace-widget::after {
+    content: "";
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 28px;
+    height: 8px;
+    background: linear-gradient(90deg, var(--amber) 12%, var(--panel-2) 12%);
+  }
+
+  .level-widget {
+    grid-template-columns: 1fr;
+    padding: 0 var(--space-2);
+  }
+
+  .level-widget time,
+  .level-widget .hud-label {
+    display: none;
+  }
+
+  .level-widget strong {
+    font-size: 13px;
+  }
+
+  .score-widget {
+    padding: 0 var(--space-2);
+  }
+
+  .score-widget strong {
+    font-size: 15px;
+  }
+
+  .game-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .game-grid > .panel-pane {
+    display: none;
+  }
+
+  .game-grid.mobile-map #map-pane,
+  .game-grid.mobile-comms #comms-pane,
+  .game-grid.mobile-tools #comms-pane {
+    display: block;
+  }
+
+  .game-grid.mobile-map #terminal-pane,
+  .game-grid.mobile-comms #terminal-pane,
+  .game-grid.mobile-tools #terminal-pane {
+    display: none;
+  }
+
+  .chips-bar {
+    height: 44px;
+  }
+
+  .mobile-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--line);
+    background: var(--panel);
+  }
+
+  .mobile-tabs button {
+    min-height: 56px;
+    border: 0;
+    border-right: 1px solid var(--line);
+    border-radius: 0;
+    background: transparent;
+    color: var(--amber-mid);
+    font-size: 11px;
+  }
+
+  .mobile-tabs button.active {
+    color: var(--amber);
+    box-shadow: inset 0 -2px var(--amber);
+  }
+}
