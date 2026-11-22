@@ -60,6 +60,7 @@
     settingsScreen.hidden = true;
     gameScreen.hidden = true;
     menuScreen.hidden = false;
+    GW.music.start('menu');
     menuScreen.querySelector('.menu-item:not(:disabled)').focus();
   }
 
@@ -73,6 +74,7 @@
     menuScreen.hidden = true;
     settingsScreen.hidden = true;
     gameScreen.hidden = false;
+    GW.music.start('L0');
     GW.hud.init();
 
     if (!terminalReady) {

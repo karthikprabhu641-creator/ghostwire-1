@@ -6,6 +6,7 @@
   var masterGain = null;
   var compressor = null;
   var limiter = null;
+  var musicLimiter = null;
   var voices = [];
   var ambientOutput = null;
   var ambientFilter = null;
@@ -14,6 +15,7 @@
   var traceLevel = 0;
   var nextVoiceId = 0;
   var maxPolyphony = 16;
+  var readyNotified = false;
 
   function notice(message) {
     var element = document.getElementById('audio-notice');
@@ -52,6 +54,7 @@
     masterGain = context.createGain();
     compressor = context.createDynamicsCompressor();
     limiter = context.createDynamicsCompressor();
+    musicLimiter = context.createDynamicsCompressor();
 
     compressor.threshold.value = -18;
     compressor.ratio.value = 4;
@@ -60,6 +63,10 @@
     limiter.threshold.value = -3;
     limiter.ratio.value = 20;
     limiter.attack.value = 0.001;
+    musicLimiter.threshold.value = -12;
+    musicLimiter.ratio.value = 20;
+    musicLimiter.attack.value = 0.001;
+    musicLimiter.release.value = 0.12;
 
     masterGain.gain.value = 0.8;
     compressor.connect(limiter);
@@ -69,9 +76,10 @@
     ['sfx', 'music', 'amb'].forEach(function (name) {
       var bus = context.createGain();
       bus.gain.value = name === 'sfx' ? 0.9 : name === 'music' ? 0.5 : 0.35;
-      bus.connect(masterGain);
+      bus.connect(name === 'music' ? musicLimiter : masterGain);
       buses[name] = bus;
     });
+    musicLimiter.connect(masterGain);
 
     if (GW.audio.mixer) {
       GW.audio.mixer.apply();
@@ -136,14 +144,17 @@
       return Promise.resolve(false);
     }
     if (context.state === 'running') {
-      status = 'ready';
-      notice('');
+      announceReady();
       return Promise.resolve(true);
     }
 
     try {
       return context.resume().then(function () {
-        status = context.state === 'running' ? 'ready' : 'locked';
+        if (context.state === 'running') {
+          announceReady();
+        } else {
+          status = 'locked';
+        }
         notice(status === 'ready' ? '' : audioText('enable', 'CLICK TO ENABLE AUDIO'));
         return status === 'ready';
       }).catch(function (error) {
@@ -157,6 +168,15 @@
       notice(audioText('enable', 'CLICK TO ENABLE AUDIO'));
       GW.events.emit('audioresumeerror', error);
       return Promise.resolve(false);
+    }
+
+    function announceReady() {
+      status = 'ready';
+      notice('');
+      if (!readyNotified) {
+        readyNotified = true;
+        GW.events.emit('audioready');
+      }
     }
   }
 
@@ -334,6 +354,7 @@
     setBusGain: setBusGain,
     duckMusic: duckMusic,
     getContext: function () { return context; },
+    getBus: function (name) { return buses[name] || null; },
     getStatus: function () { return status; },
     getVoiceCount: function () { return voices.length; },
     isReady: function () { return Boolean(context && context.state === 'running'); }
