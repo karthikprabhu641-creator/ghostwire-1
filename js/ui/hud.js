@@ -8,6 +8,7 @@
   var needle;
   var number;
   var gauge;
+  var levelLabel;
 
   function init() {
     if (initialized) {
@@ -18,8 +19,17 @@
     needle = document.getElementById('trace-needle');
     number = document.querySelector('.gauge-number');
     gauge = document.querySelector('.trace-gauge');
+    levelLabel = document.getElementById('hud-level');
     GW.events.on('tracechange', function (event) {
       setTrace(Math.round(event.value));
+    });
+    GW.events.on('levelstart', function (event) {
+      var level = GW.levels.get(event.id);
+      if (level && levelLabel) {
+        levelLabel.textContent = event.id + ' // ' + level.title;
+      }
+      elapsed = 0;
+      render();
     });
     GW.loop.subscribe(update, render);
   }

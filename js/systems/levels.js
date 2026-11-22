@@ -87,7 +87,9 @@
     if (!allowed) {
       return false;
     }
-    GW.score.addAttempt();
+    if (name !== 'hint') {
+      GW.score.addAttempt();
+    }
     var result = active.definition.onCommand(name, args, parsed, active.context);
     if (typeof active.definition.isComplete === 'function' &&
         active.definition.isComplete(active.context)) {

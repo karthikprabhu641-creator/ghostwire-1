@@ -62,10 +62,37 @@
     return result;
   }
 
+  function complete(date, dailySeed, ending) {
+    var key = dateKey(date);
+    var expectedSeed = seed(key);
+    var value = Number(dailySeed) >>> 0;
+    if (value !== expectedSeed) {
+      throw new RangeError('Daily Heist seed does not match its date.');
+    }
+    if (ending !== 'ghost' && ending !== 'whistle') {
+      throw new RangeError('Daily Heist ending is invalid.');
+    }
+
+    var save = GW.store.load();
+    if (!save.daily.completions || typeof save.daily.completions !== 'object' ||
+        Array.isArray(save.daily.completions)) {
+      save.daily.completions = {};
+    }
+    if (Object.prototype.hasOwnProperty.call(save.daily.completions, key)) {
+      return false;
+    }
+    save.daily.completions[key] = {seed: value, ending: ending};
+    save.daily.lastCompleted = key;
+    GW.store.save(save);
+    GW.events.emit('dailycomplete', {date: key, seed: value, ending: ending});
+    return true;
+  }
+
   // Public Daily Heist contract: deterministic UTC date seed and streak lifecycle.
   GW.daily = {
     seed: seed,
     get: get,
-    start: start
+    start: start,
+    complete: complete
   };
 })(window.GW);

@@ -7,6 +7,43 @@
   var settingsScreen;
   var gameScreen;
   var terminalReady = false;
+  var levelOrder = ['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6'];
+
+  function startRun(mode, seed, metadata) {
+    var runSeed = Number(seed) >>> 0;
+    var run = Object.assign({}, metadata || {}, {
+      mode: mode,
+      seed: runSeed,
+      dailySeed: mode === 'daily' ? runSeed : null
+    });
+    GW.store.set('activeRun', run);
+    GW.story.clear();
+    showGame();
+    GW.levels.start('L0', {
+      seed: runSeed,
+      dailySeed: run.dailySeed,
+      dailyDate: run.date
+    });
+  }
+
+  function startFollowingLevel(event) {
+    if (!event.success) {
+      return;
+    }
+    var index = levelOrder.indexOf(event.id);
+    if (index < 0 || index >= levelOrder.length - 1) {
+      return;
+    }
+    var run = GW.store.get('activeRun', {});
+    var seed = Number(run.seed) >>> 0;
+    var nextIndex = index + 1;
+    var nextSeed = (seed + Math.imul(nextIndex, 0x9E3779B9)) >>> 0;
+    GW.levels.start(levelOrder[nextIndex], {
+      seed: nextSeed,
+      dailySeed: run.dailySeed,
+      dailyDate: run.date
+    });
+  }
 
   function createLine(text) {
     var line = document.createElement('div');
@@ -93,16 +130,10 @@
         if (action === 'settings') {
           showSettings();
         } else if (action === 'new-run') {
-          GW.store.set('activeRun', {mode: 'story'});
-          showGame();
+          startRun('story', Date.now());
         } else if (action === 'daily') {
           var run = GW.daily.start();
-          GW.store.set('activeRun', {
-            mode: 'daily',
-            date: run.date,
-            seed: run.seed
-          });
-          showGame();
+          startRun('daily', run.seed, {date: run.date});
           GW.terminal.print(
             GW.text.daily.header + ' // ' + run.date + ' // ' +
             GW.text.daily.seed + ' ' + run.seed + ' // ' +
@@ -180,6 +211,7 @@
 
   function bindGame() {
     GW.comms.init();
+    GW.events.on('levelcomplete', startFollowingLevel);
     document.getElementById('menu-button').addEventListener('click', showMenu);
 
     document.querySelectorAll('[data-command]').forEach(function (button) {
