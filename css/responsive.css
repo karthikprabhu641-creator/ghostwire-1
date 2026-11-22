@@ -24,6 +24,10 @@
     display: none;
   }
 
+  .menu-title .audio-notice {
+    display: block;
+  }
+
   .menu-item {
     min-height: 44px;
   }

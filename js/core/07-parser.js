@@ -65,6 +65,9 @@
         return left.distance - right.distance;
       })[0];
 
+    if (GW.audio && GW.audio.sfx) {
+      GW.audio.sfx.play('error_buzz');
+    }
     GW.terminal.print(
       'COMMAND NOT FOUND: ' + parsed.name +
       (nearest ? '. Did you mean "' + nearest.name + '"?' : '.'),

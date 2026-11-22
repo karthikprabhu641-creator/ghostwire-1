@@ -86,6 +86,7 @@
   function bindMenu() {
     menuScreen.querySelectorAll('.menu-item').forEach(function (item) {
       item.addEventListener('click', function () {
+        GW.audio.sfx.play('ui_select');
         var action = item.dataset.action;
         if (action === 'settings') {
           showSettings();
@@ -130,7 +131,25 @@
   }
 
   function bindSettings() {
-    document.getElementById('settings-back').addEventListener('click', showMenu);
+    var settingsBack = document.getElementById('settings-back');
+    settingsBack.addEventListener('click', function () {
+      GW.audio.sfx.play('ui_back');
+      showMenu();
+    });
+
+    var audioSettings = GW.audio.mixer.get();
+    settingsScreen.querySelectorAll('[data-audio-bus]').forEach(function (slider) {
+      var bus = slider.dataset.audioBus;
+      slider.value = Math.round(audioSettings[bus] * 100);
+      slider.addEventListener('input', function () {
+        GW.audio.mixer.setVolume(bus, Number(slider.value) / 100);
+      });
+    });
+    var mute = settingsScreen.querySelector('[data-audio-mute]');
+    mute.checked = audioSettings.muted;
+    mute.addEventListener('change', function () {
+      GW.audio.mixer.setMuted(mute.checked);
+    });
 
     var reduceMotion = document.getElementById('reduce-motion');
     reduceMotion.addEventListener('change', function () {

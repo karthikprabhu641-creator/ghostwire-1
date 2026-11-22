@@ -3,6 +3,15 @@
 
   function attach(input, handlers) {
     input.addEventListener('keydown', function (event) {
+      if (GW.audio && GW.audio.sfx) {
+        if (event.key === 'Enter') {
+          GW.audio.sfx.play('key_enter');
+        } else if (event.key === 'Backspace') {
+          GW.audio.sfx.play('key_backspace');
+        } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+          GW.audio.sfx.play('key_tick');
+        }
+      }
       if (event.key === 'Enter' && handlers.submit) {
         event.preventDefault();
         handlers.submit(input.value);

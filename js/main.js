@@ -37,6 +37,7 @@
     }
   });
 
+  GW.audio.mixer.init();
   GW.screens.init();
   GW.loop.subscribe(function (delta) {
     GW.quality.update(delta);

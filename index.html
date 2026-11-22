@@ -29,6 +29,7 @@
         <span class="menu-kicker">AURUM // NIGHT 09</span>
         <h1>GHOSTWIRE</h1>
         <p>One night. One vault. No second key.</p>
+        <p id="audio-notice" class="audio-notice" role="status" aria-live="polite"></p>
       </div>
       <nav class="menu-list" aria-label="Main menu">
         <button class="menu-item" type="button" data-action="new-run"><span>01</span> NEW RUN</button>
@@ -49,10 +50,10 @@
         <button id="settings-back" class="text-button" type="button">BACK</button>
       </header>
       <div class="settings-grid">
-        <label>Master <input type="range" min="0" max="100" value="80"></label>
-        <label>SFX <input type="range" min="0" max="100" value="90"></label>
-        <label>Music <input type="range" min="0" max="100" value="50"></label>
-        <label class="toggle-row"><span>Mute</span><input type="checkbox"></label>
+        <label>Master <input type="range" min="0" max="100" value="80" data-audio-bus="master"></label>
+        <label>SFX <input type="range" min="0" max="100" value="90" data-audio-bus="sfx"></label>
+        <label>Music <input type="range" min="0" max="100" value="50" data-audio-bus="music"></label>
+        <label class="toggle-row"><span>Mute</span><input type="checkbox" data-audio-mute></label>
         <label class="toggle-row"><span>Reduce motion</span><input type="checkbox" id="reduce-motion"></label>
         <label>Quality
           <select><option>Auto</option><option>High</option><option>Medium</option><option>Low</option></select>

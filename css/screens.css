@@ -68,6 +68,13 @@
   line-height: 1.5;
 }
 
+.menu-title .audio-notice {
+  min-height: 18px;
+  color: var(--ice);
+  font-size: 11px;
+  letter-spacing: .12em;
+}
+
 .menu-list {
   display: grid;
   border-top: 1px solid var(--line);

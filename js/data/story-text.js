@@ -9,6 +9,10 @@
     },
     leaderboard: {
       title: 'LOCAL LEADERBOARD'
+    },
+    audio: {
+      enable: 'CLICK TO ENABLE AUDIO',
+      unavailable: 'AUDIO UNAVAILABLE'
     }
   };
 })(window.GW);
